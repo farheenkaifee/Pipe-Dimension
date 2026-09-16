@@ -1,5 +1,6 @@
 import sys
 import pandas as pd
+import os
 
 from PyQt5.QtWidgets import (
     QApplication,
@@ -17,8 +18,11 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QTextBrowser,
     QSplitter,
-    QFrame
+    QFrame,
+    QListView
 )
+
+from PyQt5.QtGui import QPixmap
 
 from PyQt5.QtCore import Qt
 
@@ -66,10 +70,14 @@ class PipeDimensionApp(QMainWindow):
     def load_excel(self):
 
         try:
+
             self.df = pd.read_excel(EXCEL_FILE)
 
             # Remove completely empty rows
-            self.df.dropna(how="all", inplace=True)
+            self.df.dropna(
+                how="all",
+                inplace=True
+            )
 
             # Clean column names
             self.df.columns = (
@@ -81,6 +89,7 @@ class PipeDimensionApp(QMainWindow):
             # Replace NaN
             self.df = self.df.fillna("")
 
+            # Initial dataframe
             self.filtered_df = self.df.copy()
 
         except FileNotFoundError:
@@ -113,9 +122,14 @@ class PipeDimensionApp(QMainWindow):
     def setup_ui(self):
 
         central_widget = QWidget()
-        self.setCentralWidget(central_widget)
 
-        main_layout = QVBoxLayout(central_widget)
+        self.setCentralWidget(
+            central_widget
+        )
+
+        main_layout = QVBoxLayout(
+            central_widget
+        )
 
         main_layout.setContentsMargins(
             12, 10, 12, 10
@@ -128,6 +142,7 @@ class PipeDimensionApp(QMainWindow):
         # =================================================
 
         self.setStyleSheet("""
+
             QMainWindow {
                 background: #f4f6f8;
             }
@@ -140,9 +155,20 @@ class PipeDimensionApp(QMainWindow):
                 background: white;
                 border: 1px solid #b8c2cc;
                 border-radius: 4px;
-                padding: 5px 8px;
+                padding: 5px 5px;
                 font-size: 12px;
-                min-height: 28px;
+                min-height: 25px;
+            }
+
+            QComboBox QAbstractItemView::item {
+                border-bottom: 1px solid #d3d3d3;
+                padding-top: 1px;
+                padding-bottom: 1px;
+            }
+
+            QComboBox QAbstractItemView::item:hover {
+                background-color: #ffffff;
+                color: #000000;
             }
 
             QComboBox:hover {
@@ -213,6 +239,7 @@ class PipeDimensionApp(QMainWindow):
             QScrollBar:horizontal {
                 height: 10px;
             }
+
         """)
 
         # =================================================
@@ -220,7 +247,8 @@ class PipeDimensionApp(QMainWindow):
         # =================================================
 
         header = QFrame()
-        header.setFixedHeight(78)
+
+        header.setFixedHeight(100)
 
         header.setStyleSheet("""
             QFrame {
@@ -230,20 +258,86 @@ class PipeDimensionApp(QMainWindow):
             }
         """)
 
-        header_layout = QVBoxLayout(header)
+        header_layout = QHBoxLayout(header)
 
         header_layout.setContentsMargins(
-            15, 8, 15, 8
+            10, 5, 10, 5
         )
 
-        header_layout.setSpacing(2)
+        header_layout.setSpacing(10)
 
-        # Main title
+        # =================================================
+        # COMPANY LOGO - LEFT
+        # =================================================
+
+        logo_label = QLabel()
+
+        logo_label.setFixedSize(
+            220,
+            70
+        )
+
+        logo_label.setAlignment(
+            Qt.AlignLeft | Qt.AlignVCenter
+        )
+
+        logo_label.setScaledContents(False)
+
+        logo_path = os.path.join(
+            os.path.dirname(
+                os.path.abspath(__file__)
+            ),
+            "assets",
+            "company_logo.png"
+        )
+
+        logo = QPixmap(logo_path)
+
+        if not logo.isNull():
+
+            logo_label.setPixmap(
+                logo.scaled(
+                    210,
+                    60,
+                    Qt.KeepAspectRatio,
+                    Qt.SmoothTransformation
+                )
+            )
+
+        # Add logo to LEFT
+        header_layout.addWidget(
+            logo_label,
+            0,
+            Qt.AlignLeft | Qt.AlignVCenter
+        )
+
+        # =================================================
+        # TITLE CONTAINER
+        # =================================================
+
+        title_container = QWidget()
+
+        title_layout = QVBoxLayout(
+            title_container
+        )
+
+        title_layout.setContentsMargins(
+            0, 0, 0, 0
+        )
+
+        title_layout.setSpacing(2)
+
+        # =================================================
+        # MAIN TITLE
+        # =================================================
+
         title = QLabel(
-            "PIPE DIMENSION DATABASE"
+            "ASME B36.10M - STEEL PIPE DIMENSIONS"
         )
 
-        title.setAlignment(Qt.AlignCenter)
+        title.setAlignment(
+            Qt.AlignCenter
+        )
 
         title.setStyleSheet("""
             QLabel {
@@ -254,15 +348,18 @@ class PipeDimensionApp(QMainWindow):
             }
         """)
 
-        header_layout.addWidget(title)
+        # =================================================
+        # SUBTITLE
+        # =================================================
 
-        # Subtitle
         subtitle = QLabel(
             "Dimensions and Weights (Masses) of "
             "Welded and Seamless Wrought Steel Pipe"
         )
 
-        subtitle.setAlignment(Qt.AlignCenter)
+        subtitle.setAlignment(
+            Qt.AlignCenter
+        )
 
         subtitle.setStyleSheet("""
             QLabel {
@@ -272,9 +369,41 @@ class PipeDimensionApp(QMainWindow):
             }
         """)
 
-        header_layout.addWidget(subtitle)
+        title_layout.addWidget(title)
+        title_layout.addWidget(subtitle)
 
-        main_layout.addWidget(header)
+        # =================================================
+        # TITLE - CENTER
+        # =================================================
+
+        header_layout.addWidget(
+            title_container,
+            1,
+            Qt.AlignVCenter
+        )
+
+        # =================================================
+        # OPTIONAL RIGHT SPACER
+        # Keeps title truly centered relative to header
+        # =================================================
+
+        right_spacer = QWidget()
+
+        right_spacer.setFixedWidth(
+            220
+        )
+
+        header_layout.addWidget(
+            right_spacer
+        )
+
+
+        # ADD HEADER TO MAIN LAYOUT
+        main_layout.addWidget(
+            header
+        )
+
+            
 
         # =================================================
         # FILTER FRAME
@@ -292,14 +421,21 @@ class PipeDimensionApp(QMainWindow):
             }
         """)
 
-        filter_layout = QGridLayout(filter_frame)
+        filter_layout = QGridLayout(
+            filter_frame
+        )
 
         filter_layout.setContentsMargins(
             10, 7, 10, 7
         )
 
-        filter_layout.setHorizontalSpacing(12)
-        filter_layout.setVerticalSpacing(2)
+        filter_layout.setHorizontalSpacing(
+            12
+        )
+
+        filter_layout.setVerticalSpacing(
+            2
+        )
 
         columns = [
             column
@@ -307,13 +443,19 @@ class PipeDimensionApp(QMainWindow):
             if column in self.df.columns
         ]
 
+        # =================================================
+        # CREATE FILTER COMBO BOXES
+        # =================================================
+
         for index, column in enumerate(columns):
 
             # -----------------------------
             # LABEL
             # -----------------------------
 
-            label = QLabel(column)
+            label = QLabel(
+                column
+            )
 
             label.setStyleSheet("""
                 QLabel {
@@ -330,13 +472,23 @@ class PipeDimensionApp(QMainWindow):
 
             combo = QComboBox()
 
+            # Dropdown height
+            combo.view().setMinimumHeight(0)
+            combo.view().setMaximumHeight(50)
+
             combo.setMinimumHeight(28)
+
+            # Custom list view
+            view = QListView()
+
+            combo.setView(view)
 
             combo.setSizePolicy(
                 combo.sizePolicy().Expanding,
                 combo.sizePolicy().Fixed
             )
 
+            # Add initial values
             combo.addItem("All")
 
             values = (
@@ -356,15 +508,23 @@ class PipeDimensionApp(QMainWindow):
                 key=str.lower
             )
 
-            combo.addItems(values)
-
-            combo.currentIndexChanged.connect(
-                self.apply_filters
+            combo.addItems(
+                values
             )
 
+            # Connect combo box
+            combo.currentIndexChanged.connect(
+                lambda index, col=column:
+                self.filter_changed(col)
+            )
+
+            # Store combo
             self.filter_boxes[column] = combo
 
-            # Each filter gets one column
+            # -----------------------------
+            # ADD TO GRID
+            # -----------------------------
+
             filter_layout.addWidget(
                 label,
                 0,
@@ -382,7 +542,9 @@ class PipeDimensionApp(QMainWindow):
                 1
             )
 
-        main_layout.addWidget(filter_frame)
+        main_layout.addWidget(
+            filter_frame
+        )
 
         # =================================================
         # CONTROL BAR
@@ -399,19 +561,23 @@ class PipeDimensionApp(QMainWindow):
             }
         """)
 
-        control_layout = QHBoxLayout(control_frame)
+        control_layout = QHBoxLayout(
+            control_frame
+        )
 
         control_layout.setContentsMargins(
             0, 0, 0, 0
         )
 
         # Clear button
+
         clear_button = QPushButton(
             "Clear Filters"
         )
 
         clear_button.setFixedSize(
-            120, 32
+            120,
+            32
         )
 
         clear_button.clicked.connect(
@@ -425,6 +591,7 @@ class PipeDimensionApp(QMainWindow):
         control_layout.addStretch()
 
         # Record count
+
         self.record_label = QLabel()
 
         self.record_label.setStyleSheet("""
@@ -452,7 +619,9 @@ class PipeDimensionApp(QMainWindow):
             Qt.Horizontal
         )
 
-        splitter.setChildrenCollapsible(False)
+        splitter.setChildrenCollapsible(
+            False
+        )
 
         # =================================================
         # LEFT - TABLE
@@ -468,13 +637,17 @@ class PipeDimensionApp(QMainWindow):
             0, 0, 5, 0
         )
 
-        table_layout.setSpacing(5)
+        table_layout.setSpacing(
+            5
+        )
 
         table_title = QLabel(
             "PIPE DIMENSION DATA"
         )
 
-        table_title.setFixedHeight(28)
+        table_title.setFixedHeight(
+            28
+        )
 
         table_title.setStyleSheet("""
             QLabel {
@@ -495,9 +668,13 @@ class PipeDimensionApp(QMainWindow):
 
         self.table = QTableWidget()
 
-        self.table.setSortingEnabled(True)
+        self.table.setSortingEnabled(
+            True
+        )
 
-        self.table.setAlternatingRowColors(True)
+        self.table.setAlternatingRowColors(
+            True
+        )
 
         self.table.setSelectionBehavior(
             QTableWidget.SelectRows
@@ -507,20 +684,26 @@ class PipeDimensionApp(QMainWindow):
             QTableWidget.NoEditTriggers
         )
 
-        self.table.setWordWrap(False)
+        self.table.setWordWrap(
+            False
+        )
 
-        self.table.setShowGrid(True)
+        self.table.setShowGrid(
+            True
+        )
 
         self.table.verticalHeader().setDefaultSectionSize(
             25
         )
 
         # Row number width
+
         self.table.verticalHeader().setFixedWidth(
             36
         )
 
         # Horizontal header
+
         self.table.horizontalHeader().setStretchLastSection(
             False
         )
@@ -543,13 +726,17 @@ class PipeDimensionApp(QMainWindow):
             5, 0, 0, 0
         )
 
-        writeup_layout.setSpacing(5)
+        writeup_layout.setSpacing(
+            5
+        )
 
         writeup_title = QLabel(
             "WELDED AND SEAMLESS WROUGHT STEEL PIPE"
         )
 
-        writeup_title.setFixedHeight(28)
+        writeup_title.setFixedHeight(
+            28
+        )
 
         writeup_title.setStyleSheet("""
             QLabel {
@@ -630,7 +817,10 @@ class PipeDimensionApp(QMainWindow):
 
         <ul>
             <li>API 5L - Specification for Line Pipe</li>
-            <li>ASME B1.20.1 - Pipe Threads, General Purpose (Inch)</li>
+            <li>
+                ASME B1.20.1 - Pipe Threads,
+                General Purpose (Inch)
+            </li>
         </ul>
 
         <h3>4 MATERIALS</h3>
@@ -779,17 +969,20 @@ class PipeDimensionApp(QMainWindow):
         )
 
         # 60% table / 40% document
+
         splitter.setStretchFactor(
-            0, 6
+            0,
+            6
         )
 
         splitter.setStretchFactor(
-            1, 4
+            1,
+            4
         )
 
         splitter.setSizes([
-            900,
-            600
+            1000,
+            550
         ])
 
         main_layout.addWidget(
@@ -804,6 +997,153 @@ class PipeDimensionApp(QMainWindow):
         self.populate_table(
             self.df
         )
+
+        # =================================================
+        # COPYRIGHT
+        # =================================================
+
+        copyright_title = QLabel(
+            "Copyright@ Ashkam Energy Pvt Ltd 2026"
+        )
+
+        copyright_title.setFixedHeight(
+            28
+        )
+
+        copyright_title.setStyleSheet("""
+            QLabel {
+                color: #16355d;
+                font-size: 10px;
+                font-weight: bold;
+                padding-left: 3px;
+            }
+        """)
+
+        main_layout.addWidget(
+            copyright_title
+        )
+
+    # =====================================================
+    # DEPENDENT FILTERS
+    # =====================================================
+
+    def filter_changed(self, changed_column):
+
+        # Order of dependency
+        filter_order = [
+            "NPS",
+            "DN",
+            "Identification",
+            "Schedule No."
+        ]
+
+        if changed_column not in filter_order:
+            self.apply_filters()
+            return
+
+        changed_index = filter_order.index(
+            changed_column
+        )
+
+        # -------------------------------------------------
+        # Update filters AFTER changed filter
+        # -------------------------------------------------
+
+        for column in filter_order[changed_index + 1:]:
+
+            if column not in self.filter_boxes:
+                continue
+
+            combo = self.filter_boxes[column]
+
+            # Save current selection
+            current_value = combo.currentText()
+
+            # Start with complete dataframe
+            temp_df = self.df.copy()
+
+            # -------------------------------------------------
+            # Apply all previous filters
+            # -------------------------------------------------
+
+            for previous_column in filter_order:
+
+                if previous_column not in self.filter_boxes:
+                    continue
+
+                if previous_column == column:
+                    break
+
+                selected = self.filter_boxes[
+                    previous_column
+                ].currentText()
+
+                if selected != "All":
+
+                    temp_df = temp_df[
+                        temp_df[previous_column]
+                        .astype(str)
+                        .str.strip()
+                        == selected
+                    ]
+
+            # -------------------------------------------------
+            # Get valid values
+            # -------------------------------------------------
+
+            values = (
+                temp_df[column]
+                .astype(str)
+                .str.strip()
+                .unique()
+                .tolist()
+            )
+
+            values = sorted(
+                [
+                    value
+                    for value in values
+                    if value != ""
+                ],
+                key=str.lower
+            )
+
+            # -------------------------------------------------
+            # Rebuild combo
+            # -------------------------------------------------
+
+            combo.blockSignals(True)
+
+            combo.clear()
+
+            combo.addItem(
+                "All"
+            )
+
+            combo.addItems(
+                values
+            )
+
+            # Restore old selection if still valid
+            if current_value in values:
+
+                combo.setCurrentText(
+                    current_value
+                )
+
+            else:
+
+                combo.setCurrentIndex(
+                    0
+                )
+
+            combo.blockSignals(False)
+
+        # -------------------------------------------------
+        # Apply filters to table
+        # -------------------------------------------------
+
+        self.apply_filters()
 
     # =====================================================
     # APPLY FILTERS
@@ -838,14 +1178,21 @@ class PipeDimensionApp(QMainWindow):
 
     def clear_filters(self):
 
+        # Reset all combos
         for combo in self.filter_boxes.values():
 
             combo.blockSignals(True)
 
-            combo.setCurrentIndex(0)
+            combo.setCurrentIndex(
+                0
+            )
 
             combo.blockSignals(False)
 
+        # Restore complete values
+        self.update_all_filter_values()
+
+        # Restore complete dataframe
         self.filtered_df = self.df.copy()
 
         self.populate_table(
@@ -853,31 +1200,78 @@ class PipeDimensionApp(QMainWindow):
         )
 
     # =====================================================
+    # RESTORE ALL FILTER VALUES
+    # =====================================================
+
+    def update_all_filter_values(self):
+
+        for column, combo in self.filter_boxes.items():
+
+            combo.blockSignals(True)
+
+            combo.clear()
+
+            combo.addItem(
+                "All"
+            )
+
+            values = (
+                self.df[column]
+                .astype(str)
+                .str.strip()
+                .unique()
+                .tolist()
+            )
+
+            values = sorted(
+                [
+                    value
+                    for value in values
+                    if value != ""
+                ],
+                key=str.lower
+            )
+
+            combo.addItems(
+                values
+            )
+
+            combo.blockSignals(False)
+
+    # =====================================================
     # POPULATE TABLE
     # =====================================================
 
     def populate_table(self, dataframe):
 
-        self.table.setSortingEnabled(False)
+        self.table.setSortingEnabled(
+            False
+        )
 
         self.table.clear()
 
         # Number of rows
+
         self.table.setRowCount(
             len(dataframe)
         )
 
         # Number of columns
+
         self.table.setColumnCount(
             len(dataframe.columns)
         )
 
         # Headers
+
         self.table.setHorizontalHeaderLabels(
             list(dataframe.columns)
         )
 
-        # Data
+        # -------------------------------------------------
+        # DATA
+        # -------------------------------------------------
+
         for row_index, row in enumerate(
             dataframe.itertuples(
                 index=False,
@@ -885,7 +1279,9 @@ class PipeDimensionApp(QMainWindow):
             )
         ):
 
-            for column_index, value in enumerate(row):
+            for column_index, value in enumerate(
+                row
+            ):
 
                 item = QTableWidgetItem(
                     str(value)
@@ -912,6 +1308,7 @@ class PipeDimensionApp(QMainWindow):
         )
 
         # Prevent extremely narrow columns
+
         for column_index in range(
             self.table.columnCount()
         ):
@@ -927,15 +1324,9 @@ class PipeDimensionApp(QMainWindow):
                     70
                 )
 
-        # Last column can use remaining space
-        if self.table.columnCount() > 0:
-
-            header.setSectionResizeMode(
-                self.table.columnCount() - 1,
-                QHeaderView.Stretch
-            )
-
-        self.table.setSortingEnabled(True)
+        self.table.setSortingEnabled(
+            True
+        )
 
         # =================================================
         # RECORD COUNT
@@ -953,7 +1344,9 @@ class PipeDimensionApp(QMainWindow):
 
 if __name__ == "__main__":
 
-    app = QApplication(sys.argv)
+    app = QApplication(
+        sys.argv
+    )
 
     app.setStyle(
         "Fusion"
