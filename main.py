@@ -63,15 +63,39 @@ class PipeDimensionApp(QMainWindow):
         self.load_excel()
         self.setup_ui()
 
-    # =====================================================
+        # =====================================================
     # LOAD EXCEL
     # =====================================================
-
     def load_excel(self):
-
         try:
+            # Determine application folder
+            if getattr(sys, "frozen", False):
+                # Running as EXE
+                BASE_DIR = os.path.dirname(sys.executable)
+            else:
+                # Running as Python script
+                BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-            self.df = pd.read_excel(EXCEL_FILE)
+            # Excel file path
+            excel_file = os.path.join(
+                BASE_DIR,
+                EXCEL_FILE
+            )
+
+            # Check whether Excel file exists
+            if not os.path.exists(excel_file):
+                QMessageBox.critical(
+                    self,
+                    "Excel File Not Found",
+                    f"Could not find the Excel file:\n\n"
+                    f"{excel_file}\n\n"
+                    f"Please make sure '{EXCEL_FILE}' "
+                    f"is in the same folder as the application."
+                )
+                sys.exit()
+
+            # Load Excel
+            self.df = pd.read_excel(excel_file)
 
             # Remove completely empty rows
             self.df.dropna(
@@ -92,27 +116,12 @@ class PipeDimensionApp(QMainWindow):
             # Initial dataframe
             self.filtered_df = self.df.copy()
 
-        except FileNotFoundError:
-
-            QMessageBox.critical(
-                self,
-                "Excel File Not Found",
-                f"Could not find:\n\n"
-                f"{EXCEL_FILE}\n\n"
-                "Make sure the Excel file is in the same folder "
-                "as this Python file."
-            )
-
-            sys.exit()
-
         except Exception as e:
-
             QMessageBox.critical(
                 self,
                 "Excel Error",
                 f"Unable to load Excel file.\n\n{str(e)}"
             )
-
             sys.exit()
 
     # =====================================================
