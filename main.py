@@ -31,7 +31,7 @@ from PyQt5.QtCore import Qt
 # CONFIGURATION
 # =========================================================
 
-EXCEL_FILE = "ASME-Pipedimension.xlsx"
+EXCEL_FILE = "assets/ASMEPipedimension.xlsx"
 
 FILTER_COLUMNS = [
     "NPS",
@@ -96,6 +96,9 @@ class PipeDimensionApp(QMainWindow):
 
             # Load Excel
             self.df = pd.read_excel(excel_file)
+
+        
+         
 
             # Remove completely empty rows
             self.df.dropna(
@@ -1012,7 +1015,7 @@ class PipeDimensionApp(QMainWindow):
         # =================================================
 
         copyright_title = QLabel(
-            "Copyright@ Ashkam Energy Pvt Ltd 2026"
+            "© 2026 ASHKAM ENERGY Pvt. Ltd. | All Rights Reserved"
         )
 
         copyright_title.setFixedHeight(
